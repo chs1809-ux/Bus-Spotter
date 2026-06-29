@@ -111,6 +111,8 @@
     <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <button id="nextThree" class="subtle">Hear next 3 arrivals</button>
+    <button id="showShot" class="subtle" hidden>Show last photo (for a sighted helper)</button>
+    <img id="lastShot" alt="The most recent photo sent for recognition" hidden style="width:100%;border-radius:var(--radius);margin-top:12px;">
 
     <div id="nearby" role="status" aria-live="polite" aria-atomic="true"></div>
 
@@ -191,12 +193,14 @@
   var RELAXED_MS=50000, FAST_MS=15000, FAST_THRESHOLD_MS=90000;
   var TRIGGER_MS=65000, WINDOW_MS=90000, CAPTURE_MS=5000, COOLDOWN_MS=30000;
   var HEALTH_REPEAT_MS=40000;
+  var CROP_FRAC=0.62, FULL_MAX_PX=1240, CROP_MAX_PX=1100000;
 
   var $=function(id){return document.getElementById(id);};
   var setup=$("setup"), app=$("app"), trackStops=$("trackStops"), trackBuses=$("trackBuses");
   var apiKeyInput=$("apiKey"), modelSel=$("modelSel"), saveKey=$("saveKey");
   var startCam=$("startCam"), video=$("video"), capture=$("capture");
   var result=$("result"), statusEl=$("status"), nearbyEl=$("nearby"), nextThree=$("nextThree");
+  var showShot=$("showShot"), lastShot=$("lastShot");
   var board=$("board"), boardH=$("board-h"), boardYour=$("boardYour"), boardOther=$("boardOther");
   var refreshBtn=$("refreshNearby"), watchRow=$("watchRow"), useWatchBox=$("useWatch"), useLocBox=$("useLoc"), speakBox=$("speak");
   var trackBtn=$("trackBtn"), stopTrackBtn=$("stopTrackBtn"), changeKey=$("changeKey");
@@ -213,7 +217,7 @@
   var lastArrivalsServices=[];         // arrivelah service objects for the relevant stop(s)
   var lastSoonestMs=null, lastPollAt=0, polling=false;
   var pollTimer=null, tickTimer=null, windowCaptureTimer=null, windowCloseTimer=null;
-  var watchOn=false, inWindow=false, cooldownUntil=0, lastWindowService=null;
+  var watchOn=false, inWindow=false, cooldownUntil=0, lastWindowService=null, lastWindowReason="", lastFrameUrl=null;
   var trackStop=null, selectedServices=[], trackLeft=false, pendingStop=null;
   var healthFault=null, lastHealthAt=0;
   var netFails=0, wakeLock=null;
@@ -452,7 +456,7 @@
 
   /* ---------- watch window ---------- */
   function openWindow(){
-    inWindow=true; lastWindowService=null; document.body.classList.add("watching");
+    inWindow=true; lastWindowService=null; lastWindowReason=""; document.body.classList.add("watching");
     setStatus("A bus is due. Watching now \u2014 point at the road."); buzz([60,40,60]);
     if(speakBox.checked) speak("A bus is due, watching now.");
     windowCapture();
@@ -464,7 +468,10 @@
     if(windowCaptureTimer){ clearInterval(windowCaptureTimer); windowCaptureTimer=null; }
     if(windowCloseTimer){ clearTimeout(windowCloseTimer); windowCloseTimer=null; }
     cooldownUntil=Date.now()+COOLDOWN_MS;
-    if(!lastWindowService){ setStatus("Watch window ended, no bus identified."); if(speakBox.checked) speak("Watch window ended."); }
+    if(!lastWindowService){
+      var wmsg = lastWindowReason ? ("Watch window ended. "+lastWindowReason) : "Watch window ended, no bus identified.";
+      setStatus(wmsg); if(speakBox.checked) speak(wmsg);
+    }
     scheduleNextPoll();
   }
   function windowCapture(){
@@ -474,54 +481,75 @@
       if(ans && ans.status==="found" && ans.services.length){
         var key=ans.services.join(",");
         if(key!==lastWindowService){ lastWindowService=key; presentIdentification(ans.services); }
-      }
+      } else if(ans && ans.detail){ lastWindowReason=ans.detail; }
     });
   }
 
   /* ---------- vision call (shared) ---------- */
-  function captureFrame(){
+  function captureFrames(){
     var vw=video.videoWidth, vh=video.videoHeight; if(!vw||!vh) return null;
-    var maxW=1024, scale=vw>maxW?maxW/vw:1;
-    canvas.width=Math.round(vw*scale); canvas.height=Math.round(vh*scale);
-    canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
-    return (canvas.toDataURL("image/jpeg",0.8).split(",")[1])||null;
+    var ctx=canvas.getContext("2d");
+    // wide frame, downscaled so the longest edge is about FULL_MAX_PX (for locating the bus)
+    var fscale=Math.min(1, FULL_MAX_PX/Math.max(vw,vh));
+    var fw=Math.max(1,Math.round(vw*fscale)), fh=Math.max(1,Math.round(vh*fscale));
+    canvas.width=fw; canvas.height=fh;
+    ctx.drawImage(video,0,0,fw,fh);
+    lastFrameUrl=canvas.toDataURL("image/jpeg",0.9);
+    var full=lastFrameUrl.split(",")[1];
+    // centre crop of the native frame, preserving its pixels (capped near CROP_MAX_PX) for sign detail
+    var cw=Math.round(vw*CROP_FRAC), ch=Math.round(vh*CROP_FRAC);
+    var cx=Math.round((vw-cw)/2), cy=Math.round((vh-ch)/2);
+    var cscale=Math.min(1, Math.sqrt(CROP_MAX_PX/(cw*ch)));
+    var ocw=Math.max(1,Math.round(cw*cscale)), och=Math.max(1,Math.round(ch*cscale));
+    canvas.width=ocw; canvas.height=och;
+    ctx=canvas.getContext("2d");
+    ctx.drawImage(video, cx,cy,cw,ch, 0,0,ocw,och);
+    var crop=canvas.toDataURL("image/jpeg",0.9).split(",")[1];
+    return {full:full, crop:crop};
   }
   function buildPrompt(){
-    var p="You are assisting a blind commuter at a bus stop in Singapore. Read the bus service number shown on the front electronic destination sign of the bus in the photo (the route number, for example 2, 15, 196, 853, 700A or NR7).\n\n";
+    var p="You are helping a blind commuter at a bus stop in Singapore identify an approaching or stopped bus. You are given TWO images of the same scene: the first is a wide shot, the second is a zoomed-in crop of its centre. Use whichever is clearer.\n\n";
+    p+="Goal: read the bus SERVICE NUMBER (the route number), for example 2, 15, 196, 853, 700A, NR7 or 95B. It is one to three digits and may end in a letter.\n\n";
+    p+="Real-world notes that matter:\n";
+    p+="- The number is usually on an amber or orange dot-matrix LED sign on the front, which can look low-resolution, washed out in daylight, blurred by motion, or partly cut off.\n";
+    p+="- That sign ALTERNATES between showing the route number and the destination name, so the number may simply not be visible in this shot.\n";
+    p+="- The number may also appear on a small plate near the windscreen, or on the side of the bus as it passes. Read it from wherever it is clearest.\n\n";
     var hint=[];
     if(mode==="track" && selectedServices.length) hint=selectedServices;
     else if(candidates.all.length) hint=candidates.all;
     if(hint.length){
-      p+="Context from the commuter's location: the bus is very likely one of these services: "+hint.join(", ")+".";
+      p+="The commuter's location suggests the bus is very likely one of: "+hint.join(", ")+".";
       if(mode!=="track" && candidates.imminent.length) p+=" Arriving imminently: "+candidates.imminent.join(", ")+".";
-      p+=" Use this as a strong hint, but if the number clearly visible on the bus is not in this list, report what you actually see rather than forcing a match.\n\n";
+      p+=" Treat this as a strong hint, but if the number you can actually read is not in this list, report what you see rather than forcing a match.\n\n";
     }
     p+="Respond with ONLY a JSON object, no other text and no markdown fences, in exactly this shape:\n";
-    p+='{"status": "found" | "no_bus" | "unclear", "services": ["<number>"]}\n';
-    p+="- status \"found\": you can read at least one service number. List them, nearest or most prominent first.\n";
-    p+="- status \"no_bus\": there is no bus in the photo. services empty.\n";
-    p+="- status \"unclear\": a bus is visible but no number is readable. services empty.\n";
-    p+="Do not include any explanation.";
+    p+='{"status":"found"|"no_bus"|"unclear","services":["<number>"],"detail":"<short reason>"}\n';
+    p+="- \"found\": you can read at least one service number. Put them in services, nearest or most prominent first. detail can be empty.\n";
+    p+="- \"no_bus\": no bus is visible. In detail say briefly what is in view instead, e.g. 'mostly road and sky'.\n";
+    p+="- \"unclear\": a bus is visible but no number is readable. In detail give the single most useful reason and a short fix, e.g. 'bus too far, wait until closer', 'sign cut off at top, tilt up', 'sign showing destination name', 'too dark', or 'too blurry'.\n";
+    p+="Keep detail under 12 words. Do not include any other explanation.";
     return p;
   }
   function parseAnswer(text){
     var t=(text||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
-    try{ var o=JSON.parse(t); if(o && typeof o.status==="string") return {status:o.status, services:Array.isArray(o.services)?o.services.map(String):[]}; }catch(e){}
+    try{ var o=JSON.parse(t); if(o && typeof o.status==="string") return {status:o.status, services:Array.isArray(o.services)?o.services.map(String):[], detail:(typeof o.detail==="string"?o.detail:"")}; }catch(e){}
     return null;
   }
   function doVisionCall(onResult){
     var key=sGet(KEY_STORE);
     if(!key){ enterSetup(); return; }
     if(!stream){ onResult(null,{message:"Camera is off. Start the camera again.",catastrophic:true}); return; }
-    var b64=captureFrame();
-    if(!b64){ onResult(null,{message:"Camera not ready yet. Try again.",catastrophic:false}); return; }
+    var frames=captureFrames();
+    if(!frames){ onResult(null,{message:"Camera not ready yet. Try again.",catastrophic:false}); return; }
+    if(showShot) showShot.hidden=false;
     busy=true;
     var model=sGet(MODEL_STORE)||"claude-sonnet-4-6";
     fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
       headers:{ "content-type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
-      body:JSON.stringify({ model:model, max_tokens:120, messages:[{role:"user",content:[
-        {type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},
+      body:JSON.stringify({ model:model, max_tokens:200, messages:[{role:"user",content:[
+        {type:"image",source:{type:"base64",media_type:"image/jpeg",data:frames.full}},
+        {type:"image",source:{type:"base64",media_type:"image/jpeg",data:frames.crop}},
         {type:"text",text:buildPrompt()}
       ]}] })
     }).then(function(res){
@@ -554,14 +582,19 @@
       capture.disabled=false;
       if(err){ flagError(err.message,err.catastrophic); capture.focus(); return; }
       if(!ans){ flagError("Could not read the reply. Try again.",false); }
-      else if(ans.status==="no_bus"){ clearResult(); setStatus("No bus visible. Try again."); }
-      else if(ans.status==="unclear"||!ans.services.length){ clearResult(); setStatus("Bus visible, number unclear. Try again."); }
+      else if(ans.status==="no_bus"){ clearResult(); setStatus(ans.detail ? ("No bus visible. "+ans.detail) : "No bus visible. Try again."); }
+      else if(ans.status==="unclear"||!ans.services.length){ clearResult(); setStatus(ans.detail ? ("Number unclear. "+ans.detail) : "Bus visible, number unclear. Try again."); }
       else { presentIdentification(ans.services); setStatus("Done. Read again any time."); }
       capture.focus();
     });
   }
   capture.addEventListener("click",readBus);
   refreshBtn.addEventListener("click",function(){ doPoll(); });
+  if(showShot) showShot.addEventListener("click",function(){
+    if(!lastFrameUrl){ setStatus("No photo captured yet."); return; }
+    if(lastShot.hidden){ lastShot.src=lastFrameUrl; lastShot.hidden=false; setStatus("Showing the last photo for a sighted helper."); }
+    else { lastShot.hidden=true; setStatus("Photo hidden."); }
+  });
 
   /* ---------- next 3 arrivals (on demand, both modes) ---------- */
   function flattenArrivals(){
@@ -727,7 +760,7 @@
   }
   startCam.addEventListener("click",function(){
     setStatus("Starting camera..."); requestWakeLock();
-    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:960} }, audio:false })
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1440} }, audio:false })
     .then(function(s){ stream=s; video.srcObject=s; return video.play(); })
     .then(function(){
       startCam.hidden=true; capture.disabled=false;
