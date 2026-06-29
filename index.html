@@ -114,6 +114,13 @@
     <button id="showShot" class="subtle" hidden>Show last photo (for a sighted helper)</button>
     <img id="lastShot" alt="The most recent photo sent for recognition" hidden style="width:100%;border-radius:var(--radius);margin-top:12px;">
 
+    <div id="camOpts" hidden>
+      <label for="zoomSel" id="zoomLabel">Camera zoom (uses a longer lens for distant signs where the phone allows)</label>
+      <select id="zoomSel"></select>
+      <label for="camSel" id="camSelLabel" hidden>Camera lens</label>
+      <select id="camSel" hidden></select>
+    </div>
+
     <div id="nearby" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Arrivals board (track mode only). Updates silently; navigable, not a live region. -->
@@ -179,6 +186,7 @@
   var KEY_STORE="busspotter.apiKey", MODEL_STORE="busspotter.model",
       SPEAK_STORE="busspotter.speak", LOC_STORE="busspotter.useLoc", WATCH_STORE="busspotter.watch",
       STOPS_CACHE="busspotter.stops", STOPS_CACHE_TS="busspotter.stopsTs",
+      ZOOM_STORE="busspotter.zoom", CAM_STORE="busspotter.cam",
       SVCS_CACHE="busspotter.svcs", SVCS_CACHE_TS="busspotter.svcsTs",
       TRACK_STOP="busspotter.trackStop", TRACK_BUSES="busspotter.trackBuses";
 
@@ -201,6 +209,7 @@
   var startCam=$("startCam"), video=$("video"), capture=$("capture");
   var result=$("result"), statusEl=$("status"), nearbyEl=$("nearby"), nextThree=$("nextThree");
   var showShot=$("showShot"), lastShot=$("lastShot");
+  var camOpts=$("camOpts"), zoomSel=$("zoomSel"), zoomLabel=$("zoomLabel"), camSel=$("camSel"), camSelLabel=$("camSelLabel");
   var board=$("board"), boardH=$("board-h"), boardYour=$("boardYour"), boardOther=$("boardOther");
   var refreshBtn=$("refreshNearby"), watchRow=$("watchRow"), useWatchBox=$("useWatch"), useLocBox=$("useLoc"), speakBox=$("speak");
   var trackBtn=$("trackBtn"), stopTrackBtn=$("stopTrackBtn"), changeKey=$("changeKey");
@@ -210,6 +219,7 @@
 
   /* ---------- state ---------- */
   var stream=null, busy=false;
+  var videoTrack=null, zoomCap=null, currentZoomNorm=0, selectedCamId=null;
   var stopsData=null, svcsData=null;
   var mode="standard";                 // "standard" | "track"
   var candidates={all:[],imminent:[],stopName:""};
@@ -497,7 +507,9 @@
     lastFrameUrl=canvas.toDataURL("image/jpeg",0.9);
     var full=lastFrameUrl.split(",")[1];
     // centre crop of the native frame, preserving its pixels (capped near CROP_MAX_PX) for sign detail
-    var cw=Math.round(vw*CROP_FRAC), ch=Math.round(vh*CROP_FRAC);
+    // centre crop of the native frame; as optical zoom rises, widen the crop so we do not over-tighten
+    var cf=CROP_FRAC+(0.9-CROP_FRAC)*currentZoomNorm;
+    var cw=Math.round(vw*cf), ch=Math.round(vh*cf);
     var cx=Math.round((vw-cw)/2), cy=Math.round((vh-ch)/2);
     var cscale=Math.min(1, Math.sqrt(CROP_MAX_PX/(cw*ch)));
     var ocw=Math.max(1,Math.round(cw*cscale)), och=Math.max(1,Math.round(ch*cscale));
@@ -753,18 +765,90 @@
   /* ---------- camera ---------- */
   function stopCamera(){
     if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
+    videoTrack=null; camOpts.hidden=true;
     capture.disabled=true; startCam.hidden=false;
     if(inWindow) closeWindow();
     if(tickTimer){ clearInterval(tickTimer); tickTimer=null; }
     if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; }
   }
+
+  function videoConstraints(camId){
+    var v={ width:{ideal:1920}, height:{ideal:1440} };
+    if(camId) v.deviceId={exact:camId}; else v.facingMode={ideal:"environment"};
+    return { video:v, audio:false };
+  }
+  function startStream(camId){
+    return navigator.mediaDevices.getUserMedia(videoConstraints(camId))
+      .catch(function(err){ if(camId) return navigator.mediaDevices.getUserMedia(videoConstraints(null)); throw err; })
+      .then(function(s){ stream=s; video.srcObject=s; videoTrack=(s.getVideoTracks()[0]||null); return video.play().then(function(){return s;}); });
+  }
+
+  /* ---------- camera zoom (engages a longer lens where the device allows) ---------- */
+  function updateCamOptsVisibility(){ camOpts.hidden=(zoomSel.hidden && camSel.hidden); }
+  function buildZoomOptions(min,max){
+    var opts=[], factorMode=(min>=0.5 && min<=1.5);
+    if(factorMode){
+      [1,1.5,2,3,5].forEach(function(f){ if(f>=min-0.01 && f<=max+0.01) opts.push({label:(f===1?"1x (off)":f+"x"), value:f}); });
+      if(!opts.length || opts[opts.length-1].value < max-0.1) opts.push({label:(Math.round(max*10)/10)+"x (max)", value:max});
+    } else {
+      [["Off",0],["Low",0.33],["Medium",0.6],["High",1]].forEach(function(p){ opts.push({label:p[0], value:min+(max-min)*p[1]}); });
+    }
+    opts.forEach(function(o){ o.norm=(max>min)?((o.value-min)/(max-min)):0; });
+    return opts;
+  }
+  function applyZoomValue(value,norm,silent){
+    currentZoomNorm=(typeof norm==="number")?norm:0;
+    if(videoTrack && videoTrack.applyConstraints && zoomCap){ try{ videoTrack.applyConstraints({advanced:[{zoom:value}]})["catch"](function(){}); }catch(e){} }
+    sSet(ZOOM_STORE,String(value));
+    if(!silent){ var o=zoomSel.options[zoomSel.selectedIndex]; setStatus("Camera zoom: "+(o?o.textContent:String(value))+"."); }
+  }
+  function setupZoom(){
+    zoomSel.innerHTML=""; zoomCap=null; currentZoomNorm=0;
+    var caps=null; try{ caps=videoTrack && videoTrack.getCapabilities ? videoTrack.getCapabilities() : null; }catch(e){}
+    if(!caps || !caps.zoom || typeof caps.zoom.max==="undefined" || caps.zoom.max<=caps.zoom.min){ zoomSel.hidden=true; zoomLabel.hidden=true; updateCamOptsVisibility(); return; }
+    zoomCap=caps.zoom;
+    var opts=buildZoomOptions(caps.zoom.min,caps.zoom.max);
+    opts.forEach(function(o){ var el=document.createElement("option"); el.value=String(o.value); el.textContent=o.label; el.setAttribute("data-norm",String(o.norm)); zoomSel.appendChild(el); });
+    zoomSel.hidden=false; zoomLabel.hidden=false; updateCamOptsVisibility();
+    // choose stored, else a moderate default (about 2x)
+    var stored=sGet(ZOOM_STORE), idx=0, best=1e9;
+    var targetVal = (stored!==null) ? parseFloat(stored) : (caps.zoom.min>=0.5&&caps.zoom.min<=1.5 ? 2 : caps.zoom.min+(caps.zoom.max-caps.zoom.min)*0.6);
+    for(var i=0;i<opts.length;i++){ var d=Math.abs(opts[i].value-targetVal); if(d<best){best=d; idx=i;} }
+    zoomSel.selectedIndex=idx;
+    applyZoomValue(opts[idx].value,opts[idx].norm,true);
+  }
+  zoomSel.addEventListener("change",function(){
+    var o=zoomSel.options[zoomSel.selectedIndex]; if(!o) return;
+    applyZoomValue(parseFloat(o.value), parseFloat(o.getAttribute("data-norm")||"0"), false);
+  });
+
+  /* ---------- lens picker (manual choice among back cameras) ---------- */
+  function setupCameraPicker(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices){ camSel.hidden=true; camSelLabel.hidden=true; updateCamOptsVisibility(); return; }
+    navigator.mediaDevices.enumerateDevices().then(function(devs){
+      var cams=devs.filter(function(d){return d.kind==="videoinput";});
+      if(cams.length<=1){ camSel.hidden=true; camSelLabel.hidden=true; updateCamOptsVisibility(); return; }
+      camSel.innerHTML="";
+      cams.forEach(function(c,i){ var el=document.createElement("option"); el.value=c.deviceId; el.textContent=c.label||("Camera "+(i+1)); camSel.appendChild(el); });
+      var cur=videoTrack && videoTrack.getSettings ? (videoTrack.getSettings().deviceId||"") : "";
+      if(selectedCamId) camSel.value=selectedCamId; else if(cur) camSel.value=cur;
+      camSel.hidden=false; camSelLabel.hidden=false; updateCamOptsVisibility();
+    })["catch"](function(){});
+  }
+  camSel.addEventListener("change",function(){
+    selectedCamId=camSel.value; sSet(CAM_STORE,selectedCamId);
+    setStatus("Switching lens...");
+    startStream(selectedCamId).then(function(){ setupZoom(); var o=camSel.options[camSel.selectedIndex]; setStatus("Using "+(o?o.textContent:"selected lens")+"."); })
+      ["catch"](function(){ setStatus("Could not switch lens."); });
+  });
+
   startCam.addEventListener("click",function(){
     setStatus("Starting camera..."); requestWakeLock();
-    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1440} }, audio:false })
-    .then(function(s){ stream=s; video.srcObject=s; return video.play(); })
+    startStream(sGet(CAM_STORE))
     .then(function(){
       startCam.hidden=true; capture.disabled=false;
       updateModeUI(); setStatus("Camera ready."); capture.focus();
+      setupZoom(); setupCameraPicker();
       if(!tickTimer) tickTimer=setInterval(tick,1000);
       if(mode==="track" || useLocBox.checked) doPoll();
       if(mode==="standard" && useWatchBox.checked && useLocBox.checked) startWatch();
