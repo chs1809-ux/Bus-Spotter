@@ -6,74 +6,86 @@
 <title>Bus Spotter</title>
 <style>
   :root {
-    --bg: #0d1117; --surface: #161b22; --surface-raised: #21262d;
-    --text: #f0f6fc; --muted: #9da7b3; --accent: #ffd23f; --accent-text: #0d1117;
-    --danger: #ff6b6b; --ok: #3fb950; --focus: #58a6ff; --radius: 14px;
+    --bg:#0d1117; --surface:#161b22; --surface-raised:#21262d;
+    --text:#f0f6fc; --muted:#9da7b3; --accent:#ffd23f; --accent-text:#0d1117;
+    --danger:#ff6b6b; --ok:#3fb950; --focus:#58a6ff; --radius:14px;
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; }
-  body {
-    background: var(--bg); color: var(--text);
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    font-size: 18px; line-height: 1.5; min-height: 100vh;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  *{box-sizing:border-box;} html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    font-size:18px; line-height:1.5; min-height:100vh;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  main { max-width: 640px; margin: 0 auto; padding: 20px 18px 40px; }
-  h1 { font-size: 1.6rem; margin: 8px 0 4px; letter-spacing: -0.01em; }
-  .tagline { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
-  :focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+  main{max-width:640px; margin:0 auto; padding:20px 18px 40px;}
+  h1{font-size:1.6rem; margin:8px 0 4px; letter-spacing:-0.01em;}
+  h2{font-size:1.25rem; margin:8px 0 4px;}
+  h3{font-size:1rem; margin:18px 0 6px; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em;}
+  .tagline{color:var(--muted); margin:0 0 24px; font-size:0.95rem;}
+  :focus-visible{outline:4px solid var(--focus); outline-offset:3px;}
+  h1:focus,h2:focus{outline:none;}
 
-  button {
-    font: inherit; cursor: pointer; border: none; border-radius: var(--radius);
-    width: 100%; padding: 22px 20px; font-weight: 700; font-size: 1.25rem;
-    background: var(--surface-raised); color: var(--text); margin-top: 14px; min-height: 68px;
+  button{
+    font:inherit; cursor:pointer; border:none; border-radius:var(--radius);
+    width:100%; padding:22px 20px; font-weight:700; font-size:1.25rem;
+    background:var(--surface-raised); color:var(--text); margin-top:14px; min-height:68px;
   }
-  button.primary { background: var(--accent); color: var(--accent-text); font-size: 1.45rem; min-height: 96px; }
-  button.subtle { background: transparent; color: var(--muted); border: 1px solid var(--surface-raised); font-size: 1rem; font-weight: 600; min-height: 52px; padding: 14px; }
-  button:disabled { opacity: 0.45; cursor: not-allowed; }
+  button.primary{background:var(--accent); color:var(--accent-text); font-size:1.45rem; min-height:96px;}
+  button.subtle{background:transparent; color:var(--muted); border:1px solid var(--surface-raised); font-size:1rem; font-weight:600; min-height:52px; padding:14px;}
+  button.stopbtn{background:var(--surface); border:1px solid var(--surface-raised); text-align:left; font-size:1.1rem; font-weight:600; min-height:60px;}
+  button:disabled{opacity:0.45; cursor:not-allowed;}
 
-  label { display: block; font-weight: 600; margin: 18px 0 8px; }
-  input[type=password], select {
-    font: inherit; width: 100%; padding: 16px; border-radius: var(--radius);
-    border: 1px solid var(--surface-raised); background: var(--surface); color: var(--text); min-height: 56px;
+  label{display:block; font-weight:600; margin:18px 0 8px;}
+  input[type=password],input[type=text],input[type=tel],select{
+    font:inherit; width:100%; padding:16px; border-radius:var(--radius);
+    border:1px solid var(--surface-raised); background:var(--surface); color:var(--text); min-height:56px;
   }
-  .card { background: var(--surface); border: 1px solid var(--surface-raised); border-radius: var(--radius); padding: 18px; margin-top: 18px; }
-  .hint { color: var(--muted); font-size: 0.9rem; margin: 10px 0 0; }
+  .card{background:var(--surface); border:1px solid var(--surface-raised); border-radius:var(--radius); padding:18px; margin-top:18px;}
+  .hint{color:var(--muted); font-size:0.9rem; margin:10px 0 0;}
 
-  #result {
-    margin-top: 22px; padding: 28px 20px; border-radius: var(--radius);
-    background: var(--surface); border: 2px solid var(--surface-raised); text-align: center;
-    font-size: 2.4rem; font-weight: 800; min-height: 110px;
-    display: flex; align-items: center; justify-content: center; word-break: break-word;
+  #result{
+    margin-top:22px; padding:28px 20px; border-radius:var(--radius);
+    background:var(--surface); border:2px solid var(--surface-raised); text-align:center;
+    font-size:2.4rem; font-weight:800; min-height:110px;
+    display:flex; align-items:center; justify-content:center; word-break:break-word;
   }
-  #result.found { border-color: var(--accent); color: var(--accent); }
-  #result.error { border-color: var(--danger); color: var(--danger); font-size: 1.4rem; font-weight: 600; }
-  #result:empty { display: none; }
+  #result.found{border-color:var(--accent); color:var(--accent);}
+  #result.error{border-color:var(--danger); color:var(--danger); font-size:1.4rem; font-weight:600;}
+  #result:empty{display:none;}
+  body.watching #result.found{border-color:var(--ok); color:var(--ok);}
 
-  #status { color: var(--muted); margin-top: 12px; min-height: 1.5em; text-align: center; }
-  #nearby { margin-top: 14px; padding: 14px 16px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--surface-raised); color: var(--text); font-size: 1rem; }
-  #nearby:empty { display: none; }
-  .watching #result.found { border-color: var(--ok); color: var(--ok); }
+  #status{color:var(--muted); margin-top:12px; min-height:1.5em; text-align:center;}
+  #nearby{margin-top:14px; padding:14px 16px; border-radius:var(--radius); background:var(--surface); border:1px solid var(--surface-raised); font-size:1rem;}
+  #nearby:empty{display:none;}
 
-  video { width: 100%; border-radius: var(--radius); background: #000; margin-top: 16px; aspect-ratio: 4 / 3; object-fit: cover; }
+  #board{margin-top:18px;}
+  #board ul{list-style:none; margin:6px 0 0; padding:0;}
+  #board li{background:var(--surface); border:1px solid var(--surface-raised); border-radius:10px; padding:14px 16px; margin-top:8px; font-size:1.05rem;}
+  #board li:focus-visible{outline:4px solid var(--focus);}
 
-  .row { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
-  .row input[type=checkbox] { width: 28px; height: 28px; accent-color: var(--accent); flex: 0 0 auto; }
-  .row label { margin: 0; }
-  .row input:disabled + label { opacity: 0.5; }
+  video{width:100%; border-radius:var(--radius); background:#000; margin-top:16px; aspect-ratio:4/3; object-fit:cover;}
 
-  [hidden] { display: none !important; }
-  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-  @media (prefers-reduced-motion: no-preference) { button.primary:active { transform: scale(0.99); } }
+  .row{display:flex; align-items:center; gap:12px; margin-top:18px;}
+  .row input[type=checkbox]{width:28px; height:28px; accent-color:var(--accent); flex:0 0 auto;}
+  .row label{margin:0;}
+  .row input:disabled + label{opacity:0.5;}
+
+  .checklist{margin-top:10px;}
+  .checklist .row{padding:6px 0;}
+
+  [hidden]{display:none !important;}
+  .visually-hidden{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;}
+  @media (prefers-reduced-motion:no-preference){ button.primary:active{transform:scale(0.99);} }
 </style>
 </head>
 <body>
 <main>
-  <h1>Bus Spotter</h1>
+  <h1 tabindex="-1">Bus Spotter</h1>
   <p class="tagline">Point the rear camera at a bus and hear its service number.</p>
 
+  <!-- SETUP -->
   <section id="setup" aria-labelledby="setup-h">
-    <h2 id="setup-h" class="visually-hidden">Set up</h2>
+    <h2 id="setup-h" class="visually-hidden" tabindex="-1">Set up</h2>
     <div class="card">
       <label for="apiKey">Anthropic API key</label>
       <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-..." aria-describedby="key-hint">
@@ -83,27 +95,37 @@
         <option value="claude-haiku-4-5-20251001">Haiku 4.5 (faster, cheaper)</option>
       </select>
       <button id="saveKey" class="primary" style="font-size:1.2rem;min-height:68px;">Save and continue</button>
-      <p class="hint" id="key-hint">Your key is stored only in this browser, on this device, and is sent only to Anthropic's API when you read a bus. It is never put inside the file itself. If you host this page for others, each person enters their own key.</p>
+      <p class="hint" id="key-hint">Your key is stored only in this browser, on this device, and is sent only to Anthropic's API when you read a bus. It is never put inside the file itself.</p>
     </div>
   </section>
 
+  <!-- MAIN APP -->
   <section id="app" aria-labelledby="app-h" hidden>
-    <h2 id="app-h" class="visually-hidden">Read a bus</h2>
+    <h2 id="app-h" class="visually-hidden" tabindex="-1">Read a bus</h2>
 
     <button id="startCam" class="primary" style="font-size:1.25rem;min-height:72px;">Start camera</button>
     <video id="video" playsinline autoplay muted aria-hidden="true"></video>
     <button id="capture" class="primary" disabled>Read the bus number</button>
 
-    <!-- Region A: identifications only, plus a short flag on catastrophic errors. Assertive. -->
     <div id="result" role="status" aria-live="assertive" aria-atomic="true"></div>
-    <!-- Region B: status, watch cues, error detail, "no bus". Polite. -->
     <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
-    <!-- Candidate context and refresh chirps. Polite. -->
+
+    <button id="nextThree" class="subtle">Hear next 3 arrivals</button>
+
     <div id="nearby" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Arrivals board (track mode only). Updates silently; navigable, not a live region. -->
+    <section id="board" aria-labelledby="board-h" hidden>
+      <h2 id="board-h" tabindex="-1">Arrivals</h2>
+      <h3 id="board-your-h">Your buses</h3>
+      <ul id="boardYour" aria-labelledby="board-your-h"></ul>
+      <h3 id="board-other-h">Also at this stop</h3>
+      <ul id="boardOther" aria-labelledby="board-other-h"></ul>
+    </section>
 
     <button id="refreshNearby" class="subtle" hidden>Refresh nearby buses</button>
 
-    <div class="row">
+    <div class="row" id="watchRow">
       <input type="checkbox" id="useWatch">
       <label for="useWatch">Watch mode (auto-capture when a bus is due)</label>
     </div>
@@ -116,7 +138,32 @@
       <label for="speak">Speak results aloud (extra to your screen reader)</label>
     </div>
 
+    <button id="trackBtn" class="subtle">Track a specific bus</button>
+    <button id="stopTrackBtn" class="subtle" hidden>Stop tracking</button>
     <button id="changeKey" class="subtle">Change key or model</button>
+  </section>
+
+  <!-- TRACK: STOP PICKER -->
+  <section id="trackStops" aria-labelledby="trackStops-h" hidden>
+    <h2 id="trackStops-h" tabindex="-1">Choose your stop</h2>
+    <div id="resumeWrap" hidden></div>
+    <div id="trackStopsList" role="status" aria-live="polite">Finding stops near you...</div>
+    <div class="card">
+      <label for="stopCode">Or enter a 5-digit bus stop code</label>
+      <input type="tel" id="stopCode" inputmode="numeric" autocomplete="off" placeholder="e.g. 10149" aria-describedby="code-hint">
+      <p class="hint" id="code-hint">Useful if your stop is missing from the list, for example if GPS is off.</p>
+      <button id="useCode" class="subtle">Use this code</button>
+    </div>
+    <button id="stopsBack" class="subtle">Back</button>
+  </section>
+
+  <!-- TRACK: BUS PICKER -->
+  <section id="trackBuses" aria-labelledby="trackBuses-h" hidden>
+    <h2 id="trackBuses-h" tabindex="-1">Choose your buses</h2>
+    <div id="busStopName" class="hint"></div>
+    <div id="trackBusesList" class="checklist" role="status" aria-live="polite">Loading buses...</div>
+    <button id="startTrackBtn" class="primary" style="font-size:1.2rem;min-height:72px;">Start watching my buses</button>
+    <button id="busesBack" class="subtle">Back</button>
   </section>
 
   <canvas id="canvas" hidden></canvas>
@@ -129,92 +176,87 @@
   /* ---------- constants ---------- */
   var KEY_STORE="busspotter.apiKey", MODEL_STORE="busspotter.model",
       SPEAK_STORE="busspotter.speak", LOC_STORE="busspotter.useLoc", WATCH_STORE="busspotter.watch",
-      STOPS_CACHE="busspotter.stops", STOPS_CACHE_TS="busspotter.stopsTs";
+      STOPS_CACHE="busspotter.stops", STOPS_CACHE_TS="busspotter.stopsTs",
+      SVCS_CACHE="busspotter.svcs", SVCS_CACHE_TS="busspotter.svcsTs",
+      TRACK_STOP="busspotter.trackStop", TRACK_BUSES="busspotter.trackBuses";
 
   var STOPS_URL="https://data.busrouter.sg/v1/stops.min.json";
+  var SVCS_URL="https://data.busrouter.sg/v1/services.min.json";
   var ARRIVE_URL="https://arrivelah2.busrouter.sg/?id=";
-  var STOPS_TTL=7*24*3600*1000;
+  var DATA_TTL=7*24*3600*1000;
 
-  var NEARBY_RADIUS_M=150, MAX_NEARBY_STOPS=3, IMMINENT_MS=180000;
-  var RELAXED_MS=50000;        // normal arrival-poll cadence
-  var FAST_MS=15000;           // accelerated cadence (matches arrivelah's 15s server cache)
-  var FAST_THRESHOLD_MS=90000; // accelerate once soonest arrival is within ~90s
-  var TRIGGER_MS=65000;        // open watch window at ~65s remaining (60s + small lead)
-  var WINDOW_MS=90000;         // watch window length
-  var CAPTURE_MS=5000;         // one capture every 5s inside a window
-  var COOLDOWN_MS=30000;       // pause after a window before another can open
+  var NEARBY_RADIUS_M=150, MAX_NEARBY_STOPS=3;
+  var PICK_RADIUS_M=500, PICK_LIMIT=8, LEAVE_RADIUS_M=250;
+  var IMMINENT_MS=180000;
+  var RELAXED_MS=50000, FAST_MS=15000, FAST_THRESHOLD_MS=90000;
+  var TRIGGER_MS=65000, WINDOW_MS=90000, CAPTURE_MS=5000, COOLDOWN_MS=30000;
+  var HEALTH_REPEAT_MS=40000;
 
   var $=function(id){return document.getElementById(id);};
-  var setup=$("setup"), app=$("app");
+  var setup=$("setup"), app=$("app"), trackStops=$("trackStops"), trackBuses=$("trackBuses");
   var apiKeyInput=$("apiKey"), modelSel=$("modelSel"), saveKey=$("saveKey");
   var startCam=$("startCam"), video=$("video"), capture=$("capture");
-  var result=$("result"), statusEl=$("status"), nearbyEl=$("nearby");
-  var refreshBtn=$("refreshNearby"), useWatchBox=$("useWatch"), useLocBox=$("useLoc"), speakBox=$("speak"), changeKey=$("changeKey");
+  var result=$("result"), statusEl=$("status"), nearbyEl=$("nearby"), nextThree=$("nextThree");
+  var board=$("board"), boardH=$("board-h"), boardYour=$("boardYour"), boardOther=$("boardOther");
+  var refreshBtn=$("refreshNearby"), watchRow=$("watchRow"), useWatchBox=$("useWatch"), useLocBox=$("useLoc"), speakBox=$("speak");
+  var trackBtn=$("trackBtn"), stopTrackBtn=$("stopTrackBtn"), changeKey=$("changeKey");
+  var resumeWrap=$("resumeWrap"), trackStopsList=$("trackStopsList"), stopCode=$("stopCode"), useCode=$("useCode"), stopsBack=$("stopsBack");
+  var busStopName=$("busStopName"), trackBusesList=$("trackBusesList"), startTrackBtn=$("startTrackBtn"), busesBack=$("busesBack");
   var canvas=$("canvas");
 
   /* ---------- state ---------- */
   var stream=null, busy=false;
-  var stopsData=null;
-  var candidates={all:[], imminent:[], stopName:""};
-  var announced={}, announcedInit=false;     // cumulative set for drift-aware "added" chirps
+  var stopsData=null, svcsData=null;
+  var mode="standard";                 // "standard" | "track"
+  var candidates={all:[],imminent:[],stopName:""};
+  var announced={}, announcedInit=false;
+  var lastArrivalsServices=[];         // arrivelah service objects for the relevant stop(s)
   var lastSoonestMs=null, lastPollAt=0, polling=false;
   var pollTimer=null, tickTimer=null, windowCaptureTimer=null, windowCloseTimer=null;
   var watchOn=false, inWindow=false, cooldownUntil=0, lastWindowService=null;
-  var netFails=0;
-  var wakeLock=null;
+  var trackStop=null, selectedServices=[], trackLeft=false, pendingStop=null;
+  var healthFault=null, lastHealthAt=0;
+  var netFails=0, wakeLock=null;
 
   /* ---------- storage ---------- */
   function sGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
   function sSet(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+  function sDel(k){ try{localStorage.removeItem(k);}catch(e){} }
 
-  /* ---------- announcing ---------- */
+  /* ---------- announce helpers ---------- */
   function announce(el,text){ el.textContent=""; window.setTimeout(function(){ el.textContent=text; },80); }
   function setStatus(t){ announce(statusEl,t); }
   function setNearby(t){ announce(nearbyEl,t); }
   function clearResult(){ result.textContent=""; result.className=""; }
+  function speak(text){ if(!("speechSynthesis" in window)) return; try{ window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); }catch(e){} }
+  function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+  function nowHHMM(){ try{ return new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Singapore"}); }catch(e){ return new Date().toLocaleTimeString(); } }
 
   function presentIdentification(services){
     var label=(services.length>1?"Buses ":"Bus ")+services.join(", ");
-    if(candidates.all.length){
+    if(mode==="track"){
+      var mine=services.some(function(n){return selectedServices.indexOf(n)!==-1;});
+      label += mine ? " \u2014 your bus" : " \u2014 not your bus";
+    } else if(candidates.all.length){
       var inList=services.some(function(n){return candidates.all.indexOf(n)!==-1;});
       if(!inList) label+=" (not in the expected list, check carefully)";
     }
-    result.className="found";
-    announce(result,label);
-    buzz([90,50,90]);
+    result.className="found"; announce(result,label); buzz([90,50,90]);
     if(speakBox.checked) speak(label);
   }
-
-  function flagError(detail, catastrophic){
+  function flagError(detail,catastrophic){
     setStatus(detail);
     if(catastrophic){ result.className="error"; announce(result,"Error \u2014 check details below."); }
   }
 
-  function speak(text){
-    if(!("speechSynthesis" in window)) return;
-    try{ window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); }catch(e){}
-  }
-  function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
-  function nowHHMM(){
-    try{ return new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Singapore"}); }
-    catch(e){ return new Date().toLocaleTimeString(); }
-  }
-
-  /* ---------- wake lock (held while the app is open and visible) ---------- */
+  /* ---------- wake lock ---------- */
   function requestWakeLock(){
     if(!("wakeLock" in navigator)) return;
-    try{
-      navigator.wakeLock.request("screen").then(function(wl){
-        wakeLock=wl;
-        wl.addEventListener("release",function(){ wakeLock=null; });
-      }).catch(function(){});
-    }catch(e){}
+    try{ navigator.wakeLock.request("screen").then(function(wl){ wakeLock=wl; wl.addEventListener("release",function(){ wakeLock=null; }); }).catch(function(){}); }catch(e){}
   }
-  document.addEventListener("visibilitychange",function(){
-    if(document.visibilityState==="visible" && !app.hidden){ requestWakeLock(); }
-  });
+  document.addEventListener("visibilitychange",function(){ if(document.visibilityState==="visible" && !app.hidden) requestWakeLock(); });
 
-  /* ---------- geometry ---------- */
+  /* ---------- geometry / sorting ---------- */
   function distMetres(lat1,lng1,lat2,lng2){
     var R=6371000, toRad=Math.PI/180;
     var dLat=(lat2-lat1)*toRad, dLng=(lng2-lng1)*toRad;
@@ -222,185 +264,223 @@
     var a=s1*s1+Math.cos(lat1*toRad)*Math.cos(lat2*toRad)*s2*s2;
     return 2*R*Math.asin(Math.sqrt(a));
   }
-  function busSort(a,b){
-    var na=parseInt(a,10), nb=parseInt(b,10);
-    if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb;
-    return String(a).localeCompare(String(b));
-  }
+  function busSort(a,b){ var na=parseInt(a,10), nb=parseInt(b,10); if(!isNaN(na)&&!isNaN(nb)&&na!==nb) return na-nb; return String(a).localeCompare(String(b)); }
 
-  /* ---------- bus-stop dataset ---------- */
+  /* ---------- datasets ---------- */
+  function cachedJSON(cacheKey,tsKey){
+    try{ var ts=parseInt(sGet(tsKey)||"0",10); if(ts && (Date.now()-ts)<DATA_TTL){ var c=sGet(cacheKey); if(c) return JSON.parse(c); } }catch(e){}
+    return null;
+  }
   function loadStops(){
     if(stopsData) return Promise.resolve(stopsData);
-    try{
-      var ts=parseInt(sGet(STOPS_CACHE_TS)||"0",10);
-      if(ts && (Date.now()-ts)<STOPS_TTL){
-        var cached=sGet(STOPS_CACHE);
-        if(cached){ stopsData=JSON.parse(cached); return Promise.resolve(stopsData); }
-      }
-    }catch(e){}
-    return fetch(STOPS_URL).then(function(r){
-      if(!r.ok) throw new Error("stops "+r.status);
-      return r.json();
-    }).then(function(data){
-      stopsData=data;
-      try{ sSet(STOPS_CACHE,JSON.stringify(data)); sSet(STOPS_CACHE_TS,String(Date.now())); }catch(e){}
-      return data;
-    });
+    var c=cachedJSON(STOPS_CACHE,STOPS_CACHE_TS); if(c){ stopsData=c; return Promise.resolve(c); }
+    return fetch(STOPS_URL).then(function(r){ if(!r.ok) throw new Error("stops "+r.status); return r.json(); })
+      .then(function(d){ stopsData=d; try{ sSet(STOPS_CACHE,JSON.stringify(d)); sSet(STOPS_CACHE_TS,String(Date.now())); }catch(e){} return d; });
   }
-  function nearestStops(lat,lng){
+  function loadServices(){
+    if(svcsData) return Promise.resolve(svcsData);
+    var c=cachedJSON(SVCS_CACHE,SVCS_CACHE_TS); if(c){ svcsData=c; return Promise.resolve(c); }
+    return fetch(SVCS_URL).then(function(r){ if(!r.ok) throw new Error("svcs "+r.status); return r.json(); })
+      .then(function(d){ svcsData=d; try{ sSet(SVCS_CACHE,JSON.stringify(d)); sSet(SVCS_CACHE_TS,String(Date.now())); }catch(e){} return d; });
+  }
+  function nearestStops(lat,lng,radius,limit){
+    radius=radius||NEARBY_RADIUS_M; limit=limit||MAX_NEARBY_STOPS;
     var out=[];
     for(var code in stopsData){
       if(!Object.prototype.hasOwnProperty.call(stopsData,code)) continue;
-      var s=stopsData[code]; // [lng, lat, name, road]
-      var d=distMetres(lat,lng,s[1],s[0]);
-      if(d<=NEARBY_RADIUS_M) out.push({code:code,name:s[2],dist:d});
+      var s=stopsData[code]; var d=distMetres(lat,lng,s[1],s[0]);
+      if(d<=radius) out.push({code:code,name:s[2],road:s[3],lat:s[1],lng:s[0],dist:d});
     }
     out.sort(function(a,b){return a.dist-b.dist;});
-    return out.slice(0,MAX_NEARBY_STOPS);
+    return out.slice(0,limit);
+  }
+  function rosterForStop(code){
+    var set={};
+    for(var no in svcsData){
+      if(!Object.prototype.hasOwnProperty.call(svcsData,no)) continue;
+      var pats=svcsData[no].routes||[];
+      for(var i=0;i<pats.length;i++){ if(pats[i].indexOf(code)!==-1){ set[no]=true; break; } }
+    }
+    return Object.keys(set).sort(busSort);
   }
 
-  /* ---------- arrivals (arrivelah) ---------- */
+  /* ---------- arrivals ---------- */
   function getPosition(){
     return new Promise(function(resolve,reject){
       if(!navigator.geolocation){ reject(new Error("no geolocation")); return; }
-      navigator.geolocation.getCurrentPosition(
-        function(p){resolve(p.coords);}, function(err){reject(err);},
-        { enableHighAccuracy:true, timeout:8000, maximumAge:10000 }
-      );
+      navigator.geolocation.getCurrentPosition(function(p){resolve(p.coords);}, function(err){reject(err);}, { enableHighAccuracy:true, timeout:8000, maximumAge:10000 });
     });
   }
-  function fetchArrivals(code){
-    return fetch(ARRIVE_URL+encodeURIComponent(code))
-      .then(function(r){ return r.ok?r.json():{services:[]}; })
-      .catch(function(){ return {services:[]}; });
+  function softPosition(){ return getPosition().then(function(c){return c;}, function(){return null;}); }
+  function fetchArrivals(code){ return fetch(ARRIVE_URL+encodeURIComponent(code)).then(function(r){ return r.ok?r.json():{services:[]}; }).catch(function(){ return {services:[]}; }); }
+
+  function deckWord(t){ return t==="SD"?"single deck":t==="DD"?"double deck":t==="BD"?"bendy":""; }
+  function loadWord(l){ return l==="SEA"?"seats available":l==="SDA"?"standing available":l==="LSD"?"limited standing":""; }
+  function minWord(m){ return m+(m===1?" minute":" minutes"); }
+  function msToMin(ms){ if(typeof ms!=="number") return null; if(ms<-60000) return null; return Math.max(0,Math.round(ms/60000)); }
+
+  function describeArrival(sv){
+    var parts=["Bus "+sv.no];
+    if(sv.next && typeof sv.next.duration_ms==="number" && sv.next.duration_ms>-60000){
+      var d=deckWord(sv.next.type); if(d) parts.push(d);
+      var l=loadWord(sv.next.load); if(l) parts.push(l);
+      if(sv.next.feature==="WAB") parts.push("wheelchair accessible");
+      var mins=msToMin(sv.next.duration_ms);
+      parts.push(mins<=0?"arriving now":"arriving in "+minWord(mins));
+      var subs=[];
+      [sv.next2,sv.next3].forEach(function(n){ var m=msToMin(n&&n.duration_ms); if(m!==null&&m>0) subs.push(m); });
+      if(subs.length===1) parts.push("then "+minWord(subs[0]));
+      else if(subs.length>=2) parts.push("then "+subs[0]+" and "+minWord(subs[subs.length-1]));
+    } else { parts.push("no arrivals shown right now"); }
+    return parts.join(", ")+".";
   }
 
+  /* ---------- candidate announce (standard, drift-aware) ---------- */
   function announceCandidates(stopName,allList,immList){
     if(!announcedInit){
-      announcedInit=true;
-      allList.forEach(function(n){ announced[n]=true; });
+      announcedInit=true; allList.forEach(function(n){ announced[n]=true; });
       var msg="Near "+stopName+".";
       if(allList.length) msg+=" Likely buses: "+allList.join(", ")+".";
       if(immList.length) msg+=" Arriving soon: "+immList.join(", ")+".";
       setNearby(msg);
     } else {
       var adds=allList.filter(function(n){ return !announced[n]; });
-      if(adds.length){
-        adds.forEach(function(n){ announced[n]=true; });
-        setNearby("Bus list refreshed at "+nowHHMM()+", added: "+adds.join(", ")+".");
-      }
+      if(adds.length){ adds.forEach(function(n){ announced[n]=true; }); setNearby("Bus list refreshed at "+nowHHMM()+", added: "+adds.join(", ")+"."); }
     }
   }
 
-  // soonest predicted arrival, extrapolated to "now"
-  function soonestEstimateMs(){
-    if(lastSoonestMs===null) return null;
-    return lastSoonestMs-(Date.now()-lastPollAt);
+  /* ---------- watch health ---------- */
+  function watchActive(){ return (mode==="track") || (mode==="standard" && watchOn); }
+  function healthMessage(f){
+    if(mode==="track"){
+      if(f==="left") return "You seem to have left "+(trackStop?trackStop.name:"your stop")+". Tracking is paused until you return.";
+      if(f==="noarrivals") return "Tracking is on, but no arrival data is coming through for your stop right now.";
+    } else {
+      if(f==="noloc") return "Watch mode is on, but cannot get your location, so it is not watching.";
+      if(f==="nostop") return "Watch mode is on, but cannot find a bus stop nearby, so it is not watching yet.";
+      if(f==="noarrivals") return "Watch mode is on, but no arrival data is coming through for the nearby stop.";
+    }
+    return "";
+  }
+  function watchHealth(fault){
+    if(!watchActive()){ healthFault=null; return; }
+    var now=Date.now();
+    if(fault){
+      if(fault!==healthFault || (now-lastHealthAt)>HEALTH_REPEAT_MS){
+        healthFault=fault; lastHealthAt=now;
+        var msg=healthMessage(fault); setStatus(msg); if(speakBox.checked) speak(msg);
+      }
+    } else if(healthFault){
+      var prev=healthFault; healthFault=null; lastHealthAt=0;
+      var r = (mode==="track") ? (prev==="left" ? ("Back at "+(trackStop?trackStop.name:"your stop")+", watching is active.") : "Arrival data is back, watching is active.") : "Stop found, watching is active.";
+      setStatus(r); if(speakBox.checked) speak(r);
+    }
   }
 
+  /* ---------- polling ---------- */
+  function soonestEstimateMs(){ if(lastSoonestMs===null) return null; return lastSoonestMs-(Date.now()-lastPollAt); }
+
   function doPoll(){
-    if(polling) return Promise.resolve();
-    if(app.hidden || !stream || !useLocBox.checked) return Promise.resolve();
-    polling=true;
-    if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; }
-    return getPosition().then(function(coords){
+    if(polling || app.hidden || !stream) return Promise.resolve();
+    if(mode==="standard" && !useLocBox.checked) return Promise.resolve();
+    polling=true; if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; }
+    return softPosition().then(function(coords){
       return loadStops().then(function(){
-        var stops=nearestStops(coords.latitude,coords.longitude);
-        if(!stops.length){
-          candidates={all:[],imminent:[],stopName:""}; lastSoonestMs=null;
-          setNearby("No bus stop within "+NEARBY_RADIUS_M+" m. Reading without narrowing.");
-          return;
-        }
-        return Promise.all(stops.map(function(s){return fetchArrivals(s.code);})).then(function(results){
-          var all={}, imminent={}, soonest=null;
-          results.forEach(function(res){
-            (res.services||[]).forEach(function(sv){
-              if(!sv||!sv.no) return;
-              all[sv.no]=true;
-              if(sv.next && typeof sv.next.duration_ms==="number"){
-                if(sv.next.duration_ms<=IMMINENT_MS) imminent[sv.no]=true;
-                if(soonest===null || sv.next.duration_ms<soonest) soonest=sv.next.duration_ms;
-              }
-            });
-          });
-          var allList=Object.keys(all).sort(busSort);
-          var immList=Object.keys(imminent).sort(busSort);
-          candidates={all:allList, imminent:immList, stopName:stops[0].name};
-          lastSoonestMs=soonest; lastPollAt=Date.now();
-          announceCandidates(stops[0].name,allList,immList);
-        });
+        if(mode==="track" && trackStop) return pollTrack(coords);
+        return pollStandard(coords);
       });
-    }).catch(function(err){
-      candidates={all:[],imminent:[],stopName:""}; lastSoonestMs=null;
-      setNearby((err&&err.code===1)?"Location permission denied. Reading without narrowing."
-                                   :"Location unavailable, reading without narrowing.");
-    }).then(function(){
-      polling=false;
-      scheduleNextPoll();
+    }).then(function(){ polling=false; scheduleNextPoll(); }, function(){ polling=false; scheduleNextPoll(); });
+  }
+
+  function pollStandard(coords){
+    if(!coords){ lastSoonestMs=null; lastArrivalsServices=[]; watchHealth("noloc"); setNearby("Location unavailable, reading without narrowing."); return Promise.resolve(); }
+    var stops=nearestStops(coords.latitude,coords.longitude);
+    if(!stops.length){ candidates={all:[],imminent:[],stopName:""}; lastSoonestMs=null; lastArrivalsServices=[]; watchHealth("nostop"); setNearby("No bus stop within "+NEARBY_RADIUS_M+" m."); return Promise.resolve(); }
+    return Promise.all(stops.map(function(s){return fetchArrivals(s.code);})).then(function(results){
+      var all={},imminent={},soonest=null,merged=[],seen={};
+      results.forEach(function(res){ (res.services||[]).forEach(function(sv){
+        if(!sv||!sv.no) return;
+        all[sv.no]=true;
+        if(!seen[sv.no]){ seen[sv.no]=1; merged.push(sv); }
+        if(sv.next && typeof sv.next.duration_ms==="number"){
+          if(sv.next.duration_ms<=IMMINENT_MS) imminent[sv.no]=true;
+          if(soonest===null||sv.next.duration_ms<soonest) soonest=sv.next.duration_ms;
+        }
+      }); });
+      candidates={all:Object.keys(all).sort(busSort), imminent:Object.keys(imminent).sort(busSort), stopName:stops[0].name};
+      lastArrivalsServices=merged; lastSoonestMs=soonest; lastPollAt=Date.now();
+      announceCandidates(stops[0].name,candidates.all,candidates.imminent);
+      watchHealth(merged.length?null:"noarrivals");
+    });
+  }
+
+  function pollTrack(coords){
+    return fetchArrivals(trackStop.code).then(function(res){
+      var services=res.services||[];
+      lastArrivalsServices=services;
+      var soonest=null;
+      services.forEach(function(sv){ if(selectedServices.indexOf(sv.no)!==-1 && sv.next && typeof sv.next.duration_ms==="number"){ if(soonest===null||sv.next.duration_ms<soonest) soonest=sv.next.duration_ms; } });
+      lastSoonestMs=soonest; lastPollAt=Date.now();
+      renderBoard(services);
+      if(coords){
+        var dist=distMetres(coords.latitude,coords.longitude,trackStop.lat,trackStop.lng);
+        if(dist>LEAVE_RADIUS_M){ trackLeft=true; watchHealth("left"); return; }
+        var wasLeft=trackLeft; trackLeft=false; if(wasLeft){ watchHealth(null); return; }
+      }
+      watchHealth(services.length?null:"noarrivals");
     });
   }
 
   function scheduleNextPoll(){
     if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; }
-    if(app.hidden || !stream || !useLocBox.checked) return;
+    if(app.hidden || !stream) return;
+    if(mode==="standard" && !useLocBox.checked) return;
     var delay=RELAXED_MS;
-    if(watchOn){
-      var est=soonestEstimateMs();
-      if(est!==null && est<=FAST_THRESHOLD_MS) delay=FAST_MS;
-    }
+    if(watchActive()){ var est=soonestEstimateMs(); if(est!==null && est<=FAST_THRESHOLD_MS) delay=FAST_MS; }
     pollTimer=setTimeout(doPoll,delay);
   }
 
-  /* ---------- the 1-second heartbeat: triggers windows, forces fresh polls near arrival ---------- */
+  /* ---------- 1-second heartbeat ---------- */
   function tick(){
-    if(!watchOn || !stream || inWindow) return;
+    if(!stream || !watchActive() || inWindow) return;
+    if(mode==="track" && trackLeft) return;
     if(Date.now()<cooldownUntil) return;
-    var est=soonestEstimateMs();
-    if(est===null) return;
-    // keep data fresh as a bus approaches, so the trigger fires on near-live numbers
-    if(est<=FAST_THRESHOLD_MS && (Date.now()-lastPollAt)>=FAST_MS && !polling){ doPoll(); }
-    if(est<=TRIGGER_MS){ openWindow(); }
+    var est=soonestEstimateMs(); if(est===null) return;
+    if(est<=FAST_THRESHOLD_MS && (Date.now()-lastPollAt)>=FAST_MS && !polling) doPoll();
+    if(est<=TRIGGER_MS) openWindow();
   }
 
   /* ---------- watch window ---------- */
   function openWindow(){
-    inWindow=true; lastWindowService=null;
-    document.body.classList.add("watching");
-    setStatus("A bus is due. Watching now \u2014 point at the road.");
-    buzz([60,40,60]);
+    inWindow=true; lastWindowService=null; document.body.classList.add("watching");
+    setStatus("A bus is due. Watching now \u2014 point at the road."); buzz([60,40,60]);
     if(speakBox.checked) speak("A bus is due, watching now.");
     windowCapture();
     windowCaptureTimer=setInterval(windowCapture,CAPTURE_MS);
     windowCloseTimer=setTimeout(closeWindow,WINDOW_MS);
   }
   function closeWindow(){
-    inWindow=false;
-    document.body.classList.remove("watching");
+    inWindow=false; document.body.classList.remove("watching");
     if(windowCaptureTimer){ clearInterval(windowCaptureTimer); windowCaptureTimer=null; }
     if(windowCloseTimer){ clearTimeout(windowCloseTimer); windowCloseTimer=null; }
     cooldownUntil=Date.now()+COOLDOWN_MS;
-    if(!lastWindowService){
-      setStatus("Watch window ended, no bus identified.");
-      if(speakBox.checked) speak("Watch window ended.");
-    }
+    if(!lastWindowService){ setStatus("Watch window ended, no bus identified."); if(speakBox.checked) speak("Watch window ended."); }
     scheduleNextPoll();
   }
   function windowCapture(){
-    if(busy) return; // in-flight guard: never stack calls
+    if(busy) return;
     doVisionCall(function(ans,err){
-      if(err){ if(err.catastrophic) flagError(err.message,true); return; } // transient watch errors stay silent
+      if(err){ if(err.catastrophic) flagError(err.message,true); return; }
       if(ans && ans.status==="found" && ans.services.length){
         var key=ans.services.join(",");
         if(key!==lastWindowService){ lastWindowService=key; presentIdentification(ans.services); }
       }
-      // no_bus / unclear mid-window: expected, announce nothing
     });
   }
 
-  /* ---------- one vision call (shared by manual + watch) ---------- */
+  /* ---------- vision call (shared) ---------- */
   function captureFrame(){
-    var vw=video.videoWidth, vh=video.videoHeight;
-    if(!vw||!vh) return null;
+    var vw=video.videoWidth, vh=video.videoHeight; if(!vw||!vh) return null;
     var maxW=1024, scale=vw>maxW?maxW/vw:1;
     canvas.width=Math.round(vw*scale); canvas.height=Math.round(vh*scale);
     canvas.getContext("2d").drawImage(video,0,0,canvas.width,canvas.height);
@@ -408,14 +488,17 @@
   }
   function buildPrompt(){
     var p="You are assisting a blind commuter at a bus stop in Singapore. Read the bus service number shown on the front electronic destination sign of the bus in the photo (the route number, for example 2, 15, 196, 853, 700A or NR7).\n\n";
-    if(candidates.all.length){
-      p+="Context from the commuter's location: the bus is very likely one of these services currently operating at this stop: "+candidates.all.join(", ")+".";
-      if(candidates.imminent.length) p+=" Services arriving imminently: "+candidates.imminent.join(", ")+".";
+    var hint=[];
+    if(mode==="track" && selectedServices.length) hint=selectedServices;
+    else if(candidates.all.length) hint=candidates.all;
+    if(hint.length){
+      p+="Context from the commuter's location: the bus is very likely one of these services: "+hint.join(", ")+".";
+      if(mode!=="track" && candidates.imminent.length) p+=" Arriving imminently: "+candidates.imminent.join(", ")+".";
       p+=" Use this as a strong hint, but if the number clearly visible on the bus is not in this list, report what you actually see rather than forcing a match.\n\n";
     }
     p+="Respond with ONLY a JSON object, no other text and no markdown fences, in exactly this shape:\n";
     p+='{"status": "found" | "no_bus" | "unclear", "services": ["<number>"]}\n';
-    p+="- status \"found\": you can read at least one service number. List them in services, nearest or most prominent first.\n";
+    p+="- status \"found\": you can read at least one service number. List them, nearest or most prominent first.\n";
     p+="- status \"no_bus\": there is no bus in the photo. services empty.\n";
     p+="- status \"unclear\": a bus is visible but no number is readable. services empty.\n";
     p+="Do not include any explanation.";
@@ -423,10 +506,7 @@
   }
   function parseAnswer(text){
     var t=(text||"").trim().replace(/^```(?:json)?/i,"").replace(/```$/,"").trim();
-    try{
-      var o=JSON.parse(t);
-      if(o && typeof o.status==="string") return { status:o.status, services:Array.isArray(o.services)?o.services.map(String):[] };
-    }catch(e){}
+    try{ var o=JSON.parse(t); if(o && typeof o.status==="string") return {status:o.status, services:Array.isArray(o.services)?o.services.map(String):[]}; }catch(e){}
     return null;
   }
   function doVisionCall(onResult){
@@ -439,53 +519,37 @@
     var model=sGet(MODEL_STORE)||"claude-sonnet-4-6";
     fetch("https://api.anthropic.com/v1/messages",{
       method:"POST",
-      headers:{
-        "content-type":"application/json",
-        "x-api-key":key,
-        "anthropic-version":"2023-06-01",
-        "anthropic-dangerous-direct-browser-access":"true"
-      },
-      body:JSON.stringify({
-        model:model, max_tokens:120,
-        messages:[{role:"user",content:[
-          {type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},
-          {type:"text",text:buildPrompt()}
-        ]}]
-      })
+      headers:{ "content-type":"application/json", "x-api-key":key, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
+      body:JSON.stringify({ model:model, max_tokens:120, messages:[{role:"user",content:[
+        {type:"image",source:{type:"base64",media_type:"image/jpeg",data:b64}},
+        {type:"text",text:buildPrompt()}
+      ]}] })
     }).then(function(res){
-      if(!res.ok){
-        return res.text().then(function(){
-          var e=new Error(""); e.httpStatus=res.status;
-          if(res.status===401){ e.message="API key rejected. Check it under Change key or model."; e.catastrophic=true; }
-          else if(res.status===429){ e.message="Too many requests. Wait a few seconds and try again."; e.catastrophic=false; }
-          else if(res.status===500||res.status===529){ e.message="The service is busy. Try again in a moment."; e.catastrophic=false; }
-          else { e.message="Something went wrong ("+res.status+")."; e.catastrophic=false; }
-          throw e;
-        });
-      }
+      if(!res.ok){ return res.text().then(function(){
+        var e=new Error("");
+        if(res.status===401){ e.message="API key rejected. Check it under Change key or model."; e.catastrophic=true; }
+        else if(res.status===429){ e.message="Too many requests. Wait a few seconds and try again."; e.catastrophic=false; }
+        else if(res.status===500||res.status===529){ e.message="The service is busy. Try again in a moment."; e.catastrophic=false; }
+        else { e.message="Something went wrong ("+res.status+")."; e.catastrophic=false; }
+        throw e;
+      }); }
       return res.json();
     }).then(function(data){
       netFails=0;
-      var text=(data.content||[]).filter(function(b){return b.type==="text";})
-        .map(function(b){return b.text;}).join(" ").trim();
+      var text=(data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join(" ").trim();
       onResult(parseAnswer(text),null);
     }).catch(function(err){
       var e=err||{};
-      if(/Failed to fetch|NetworkError/i.test(e.message||"")){
-        netFails++;
-        e.message="Could not reach the service. Check your connection.";
-        e.catastrophic=(netFails>=2);
-      }
+      if(/Failed to fetch|NetworkError/i.test(e.message||"")){ netFails++; e.message="Could not reach the service. Check your connection."; e.catastrophic=(netFails>=2); }
       if(typeof e.catastrophic==="undefined") e.catastrophic=false;
       onResult(null,e);
     }).then(function(){ busy=false; });
   }
 
-  /* ---------- manual capture (sanity check, always available) ---------- */
+  /* ---------- manual capture ---------- */
   function readBus(){
-    if(busy){ return; }
-    setStatus("Reading...");
-    capture.disabled=true;
+    if(busy) return;
+    setStatus("Reading..."); capture.disabled=true;
     doVisionCall(function(ans,err){
       capture.disabled=false;
       if(err){ flagError(err.message,err.catastrophic); capture.focus(); return; }
@@ -499,6 +563,160 @@
   capture.addEventListener("click",readBus);
   refreshBtn.addEventListener("click",function(){ doPoll(); });
 
+  /* ---------- next 3 arrivals (on demand, both modes) ---------- */
+  function flattenArrivals(){
+    var src=lastArrivalsServices||[];
+    if(mode==="track") src=src.filter(function(sv){ return selectedServices.indexOf(sv.no)!==-1; });
+    var out=[];
+    src.forEach(function(sv){ [sv.next,sv.next2,sv.next3].forEach(function(n){ if(n && typeof n.duration_ms==="number" && n.duration_ms>-60000) out.push({no:sv.no,dur:n.duration_ms}); }); });
+    out.sort(function(a,b){return a.dur-b.dur;});
+    return out;
+  }
+  nextThree.addEventListener("click",function(){
+    var list=flattenArrivals();
+    if(!list.length){ var m=(mode==="track")?"No arrivals for your buses right now.":"No arrivals to report right now."; setStatus(m); speak(m); return; }
+    var top=list.slice(0,3).map(function(a){ var mins=msToMin(a.dur); return "bus "+a.no+(mins<=0?" now":" in "+minWord(mins)); });
+    var msg="Next: "+top.join(", ")+"."; setStatus(msg); speak(msg);
+  });
+
+  /* ---------- arrivals board (track) ---------- */
+  function renderBoard(services){
+    if(mode!=="track") return;
+    boardH.textContent="Arrivals at "+trackStop.name;
+    var byNo={}; services.forEach(function(sv){ if(sv&&sv.no) byNo[sv.no]=sv; });
+    boardYour.innerHTML="";
+    selectedServices.forEach(function(no){
+      var li=document.createElement("li"); li.tabIndex=-1;
+      li.textContent = byNo[no] ? describeArrival(byNo[no]) : ("Bus "+no+", no arrivals shown right now.");
+      boardYour.appendChild(li);
+    });
+    var others=services.filter(function(sv){ return sv&&sv.no&&selectedServices.indexOf(sv.no)===-1; });
+    others.sort(function(a,b){ return (a.next?a.next.duration_ms:1e12)-(b.next?b.next.duration_ms:1e12); });
+    boardOther.innerHTML="";
+    others.forEach(function(sv){ var li=document.createElement("li"); li.tabIndex=-1; li.textContent=describeArrival(sv); boardOther.appendChild(li); });
+  }
+
+  /* ---------- view switching ---------- */
+  function showView(id,focusEl){
+    [setup,app,trackStops,trackBuses].forEach(function(s){ s.hidden=(s.id!==id); });
+    var f=focusEl || document.querySelector("#"+id+" h2") || document.querySelector("#"+id+" h1");
+    if(f){ try{ f.focus(); }catch(e){} }
+  }
+  function updateModeUI(){
+    var t=(mode==="track");
+    board.hidden=!t;
+    nearbyEl.hidden=t;
+    refreshBtn.hidden=t || !useLocBox.checked;
+    watchRow.hidden=t;
+    stopTrackBtn.hidden=!t;
+    trackBtn.hidden=t;
+  }
+
+  /* ---------- track flow ---------- */
+  function savedTrack(){
+    var code=sGet(TRACK_STOP); if(!code) return null;
+    var buses; try{ buses=JSON.parse(sGet(TRACK_BUSES)||"[]"); }catch(e){ buses=[]; }
+    return {code:code, buses:buses};
+  }
+  function openStopPicker(){
+    showView("trackStops");
+    renderResume();
+    trackStopsList.textContent="Finding stops near you...";
+    loadStops().then(function(){
+      renderResume();
+      return softPosition().then(function(coords){
+        if(!coords){ trackStopsList.textContent="Could not get your location. Enter your stop code below."; return; }
+        var stops=nearestStops(coords.latitude,coords.longitude,PICK_RADIUS_M,PICK_LIMIT);
+        if(!stops.length){ trackStopsList.textContent="No stops found near you. Enter your stop code below."; return; }
+        trackStopsList.textContent="";
+        stops.forEach(function(s){
+          var b=document.createElement("button"); b.className="stopbtn";
+          b.textContent=s.name+", "+s.road+", "+Math.round(s.dist)+" metres";
+          b.addEventListener("click",function(){ pickStop(s); });
+          trackStopsList.appendChild(b);
+        });
+      });
+    }).catch(function(){ trackStopsList.textContent="Could not load stop data. Enter your stop code below."; });
+  }
+  function renderResume(){
+    var st=savedTrack();
+    resumeWrap.innerHTML="";
+    if(st && st.buses.length && stopsData && stopsData[st.code]){
+      resumeWrap.hidden=false;
+      var name=stopsData[st.code][2];
+      var b=document.createElement("button"); b.className="primary"; b.style.fontSize="1.15rem"; b.style.minHeight="68px";
+      b.textContent="Resume: "+name+" (buses "+st.buses.join(", ")+")";
+      b.addEventListener("click",function(){
+        pendingStop={code:st.code,name:name,road:stopsData[st.code][3],lat:stopsData[st.code][1],lng:stopsData[st.code][0]};
+        beginTrack(st.buses);
+      });
+      resumeWrap.appendChild(b);
+    } else { resumeWrap.hidden=true; }
+  }
+  function pickStop(stop){ pendingStop=stop; openBusPicker(stop); }
+  useCode.addEventListener("click",function(){
+    var code=(stopCode.value||"").trim();
+    if(!/^\d{5}$/.test(code)){ setStatus("Enter a valid 5-digit stop code."); stopCode.focus(); return; }
+    loadStops().then(function(){
+      if(!stopsData[code]){ trackStopsList.textContent="Stop code "+code+" was not found."; return; }
+      var s=stopsData[code]; pickStop({code:code,name:s[2],road:s[3],lat:s[1],lng:s[0]});
+    });
+  });
+  function openBusPicker(stop){
+    showView("trackBuses");
+    busStopName.textContent=stop.name+", "+stop.road;
+    trackBusesList.textContent="Loading buses...";
+    var saved=savedTrack(); var pre=(saved && saved.code===stop.code)?saved.buses:[];
+    loadServices().then(function(){
+      renderBusChecks(rosterForStop(stop.code),pre);
+    }).catch(function(){
+      // fallback: use arrivelah's currently-arriving services as a partial roster
+      fetchArrivals(stop.code).then(function(res){
+        var list=(res.services||[]).map(function(s){return s.no;}).sort(busSort);
+        renderBusChecks(list,pre,true);
+      });
+    });
+  }
+  function renderBusChecks(roster,pre,partial){
+    trackBusesList.innerHTML="";
+    if(!roster.length){ trackBusesList.textContent="No buses found for this stop."; return; }
+    if(partial){ var note=document.createElement("p"); note.className="hint"; note.textContent="Showing currently-arriving buses only (full list unavailable)."; trackBusesList.appendChild(note); }
+    roster.forEach(function(no){
+      var row=document.createElement("div"); row.className="row";
+      var cb=document.createElement("input"); cb.type="checkbox"; cb.id="bus-"+no; cb.value=no; if(pre.indexOf(no)!==-1) cb.checked=true;
+      var lb=document.createElement("label"); lb.setAttribute("for","bus-"+no); lb.textContent="Bus "+no;
+      row.appendChild(cb); row.appendChild(lb); trackBusesList.appendChild(row);
+    });
+  }
+  startTrackBtn.addEventListener("click",function(){
+    var checked=[].slice.call(trackBusesList.querySelectorAll('input[type=checkbox]')).filter(function(c){return c.checked;}).map(function(c){return c.value;});
+    if(!checked.length){ setStatus("Select at least one bus first."); return; }
+    beginTrack(checked);
+  });
+  function beginTrack(buses){
+    trackStop=pendingStop; selectedServices=buses.slice().sort(busSort);
+    sSet(TRACK_STOP,trackStop.code); sSet(TRACK_BUSES,JSON.stringify(selectedServices));
+    mode="track"; trackLeft=false; healthFault=null; lastWindowService=null; cooldownUntil=0;
+    boardYour.innerHTML=""; boardOther.innerHTML="";
+    updateModeUI();
+    showView("app",boardH);
+    setStatus("Tracking buses "+selectedServices.join(", ")+" at "+trackStop.name+". I will watch when one is due. The manual button still works any time.");
+    if(!stream){ setStatus("Tracking set. Start the camera to begin watching buses "+selectedServices.join(", ")+"."); }
+    if(stream){ if(!tickTimer) tickTimer=setInterval(tick,1000); doPoll(); }
+  }
+  function stopTracking(){
+    mode="standard"; trackStop=null; selectedServices=[]; trackLeft=false; healthFault=null;
+    if(inWindow) closeWindow();
+    updateModeUI();
+    setStatus("Tracking stopped.");
+    announcedInit=false; announced={}; lastSoonestMs=null;
+    if(stream && useLocBox.checked) doPoll();
+  }
+  trackBtn.addEventListener("click",function(){ if(!hasKey()){ enterSetup(); return; } openStopPicker(); });
+  stopTrackBtn.addEventListener("click",stopTracking);
+  stopsBack.addEventListener("click",function(){ showView("app",app.querySelector("h2")); });
+  busesBack.addEventListener("click",function(){ openStopPicker(); });
+
   /* ---------- camera ---------- */
   function stopCamera(){
     if(stream){ stream.getTracks().forEach(function(t){t.stop();}); stream=null; }
@@ -508,19 +726,17 @@
     if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; }
   }
   startCam.addEventListener("click",function(){
-    setStatus("Starting camera...");
-    requestWakeLock();
-    navigator.mediaDevices.getUserMedia({
-      video:{ facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:960} }, audio:false
-    }).then(function(s){ stream=s; video.srcObject=s; return video.play(); }).then(function(){
+    setStatus("Starting camera..."); requestWakeLock();
+    navigator.mediaDevices.getUserMedia({ video:{ facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:960} }, audio:false })
+    .then(function(s){ stream=s; video.srcObject=s; return video.play(); })
+    .then(function(){
       startCam.hidden=true; capture.disabled=false;
-      refreshBtn.hidden=!useLocBox.checked;
-      setStatus("Camera ready.");
-      capture.focus();
+      updateModeUI(); setStatus("Camera ready."); capture.focus();
       if(!tickTimer) tickTimer=setInterval(tick,1000);
-      if(useLocBox.checked) doPoll();
-      if(useWatchBox.checked && useLocBox.checked) startWatch();
-    }).catch(function(err){
+      if(mode==="track" || useLocBox.checked) doPoll();
+      if(mode==="standard" && useWatchBox.checked && useLocBox.checked) startWatch();
+    })
+    .catch(function(err){
       var msg="Could not start the camera.";
       if(err && err.name==="NotAllowedError") msg="Camera permission was denied. Allow camera access, then start the camera again.";
       else if(err && err.name==="NotFoundError") msg="No camera was found on this device.";
@@ -529,24 +745,11 @@
     });
   });
 
-  /* ---------- watch toggle ---------- */
-  function startWatch(){
-    watchOn=true;
-    setStatus("Watch mode on. I will watch when a bus is due. The manual button still works any time.");
-    if(stream && useLocBox.checked) doPoll();
-  }
-  function stopWatch(){
-    watchOn=false;
-    if(inWindow) closeWindow();
-    setStatus("Watch mode off.");
-    scheduleNextPoll();
-  }
+  /* ---------- watch toggle (standard) ---------- */
+  function startWatch(){ watchOn=true; setStatus("Watch mode on. I will watch when a bus is due. The manual button still works any time."); if(stream && useLocBox.checked) doPoll(); }
+  function stopWatch(){ watchOn=false; if(inWindow) closeWindow(); healthFault=null; setStatus("Watch mode off."); scheduleNextPoll(); }
   useWatchBox.addEventListener("change",function(){
-    if(useWatchBox.checked && !useLocBox.checked){
-      useWatchBox.checked=false;
-      setStatus("Watch mode needs location. Turn on Use my location first.");
-      return;
-    }
+    if(useWatchBox.checked && !useLocBox.checked){ useWatchBox.checked=false; setStatus("Watch mode needs location. Turn on Use my location first."); return; }
     sSet(WATCH_STORE, useWatchBox.checked?"1":"0");
     if(useWatchBox.checked){ if(stream) startWatch(); else setStatus("Watch mode set. Start the camera to begin watching."); }
     else stopWatch();
@@ -555,21 +758,15 @@
   /* ---------- setup / key ---------- */
   function hasKey(){ return !!sGet(KEY_STORE); }
   function enterApp(){
-    setup.hidden=true; app.hidden=false;
-    refreshBtn.hidden=!useLocBox.checked;
-    useWatchBox.disabled=!useLocBox.checked;
-    requestWakeLock();
-    startCam.focus();
+    updateModeUI(); refreshBtn.hidden=(mode==="track")||!useLocBox.checked; useWatchBox.disabled=!useLocBox.checked;
+    requestWakeLock(); showView("app",startCam);
   }
   function enterSetup(){
-    stopCamera();
-    app.hidden=true; setup.hidden=false;
-    apiKeyInput.value=sGet(KEY_STORE)||""; modelSel.value=sGet(MODEL_STORE)||"claude-sonnet-4-6";
-    apiKeyInput.focus();
+    stopCamera(); apiKeyInput.value=sGet(KEY_STORE)||""; modelSel.value=sGet(MODEL_STORE)||"claude-sonnet-4-6";
+    showView("setup",apiKeyInput);
   }
   saveKey.addEventListener("click",function(){
-    var k=apiKeyInput.value.trim();
-    if(!k){ apiKeyInput.focus(); setStatus("Enter your API key first."); return; }
+    var k=apiKeyInput.value.trim(); if(!k){ apiKeyInput.focus(); setStatus("Enter your API key first."); return; }
     sSet(KEY_STORE,k); sSet(MODEL_STORE,modelSel.value); enterApp();
   });
   changeKey.addEventListener("click",function(){ enterSetup(); });
@@ -581,12 +778,11 @@
   if(sGet(LOC_STORE)==="0") useLocBox.checked=false;
   useLocBox.addEventListener("change",function(){
     sSet(LOC_STORE,useLocBox.checked?"1":"0");
-    refreshBtn.hidden=!useLocBox.checked;
     useWatchBox.disabled=!useLocBox.checked;
+    updateModeUI();
     if(!useLocBox.checked){
       if(useWatchBox.checked){ useWatchBox.checked=false; stopWatch(); }
-      if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; }
-      setNearby(""); candidates={all:[],imminent:[],stopName:""}; announcedInit=false; announced={}; lastSoonestMs=null;
+      if(mode==="standard"){ if(pollTimer){ clearTimeout(pollTimer); pollTimer=null; } setNearby(""); candidates={all:[],imminent:[],stopName:""}; announcedInit=false; announced={}; lastSoonestMs=null; }
     } else if(stream){ doPoll(); }
   });
 
