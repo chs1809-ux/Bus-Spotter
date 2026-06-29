@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Bus Spotter</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface-raised: #21262d;
+    --text: #f0f6fc;
+    --muted: #9da7b3;
+    --accent: #ffd23f;
+    --accent-text: #0d1117;
+    --danger: #ff6b6b;
+    --ok: #3fb950;
+    --focus: #58a6ff;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 18px;
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 20px 18px 40px; }
+  h1 { font-size: 1.6rem; margin: 8px 0 4px; letter-spacing: -0.01em; }
+  .tagline { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
+
+  :focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
+
+  button {
+    font: inherit; cursor: pointer; border: none; border-radius: var(--radius);
+    width: 100%; padding: 22px 20px; font-weight: 700; font-size: 1.25rem;
+    background: var(--surface-raised); color: var(--text); margin-top: 14px; min-height: 68px;
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); font-size: 1.45rem; min-height: 96px; }
+  button.subtle {
+    background: transparent; color: var(--muted); border: 1px solid var(--surface-raised);
+    font-size: 1rem; font-weight: 600; min-height: 52px; padding: 14px;
+  }
+  button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  label { display: block; font-weight: 600; margin: 18px 0 8px; }
+  input[type=password], select {
+    font: inherit; width: 100%; padding: 16px; border-radius: var(--radius);
+    border: 1px solid var(--surface-raised); background: var(--surface); color: var(--text); min-height: 56px;
+  }
+
+  .card { background: var(--surface); border: 1px solid var(--surface-raised); border-radius: var(--radius); padding: 18px; margin-top: 18px; }
+  .hint { color: var(--muted); font-size: 0.9rem; margin: 10px 0 0; }
+
+  #result {
+    margin-top: 22px; padding: 28px 20px; border-radius: var(--radius);
+    background: var(--surface); border: 2px solid var(--surface-raised); text-align: center;
+    font-size: 2.4rem; font-weight: 800; min-height: 110px;
+    display: flex; align-items: center; justify-content: center; word-break: break-word;
+  }
+  #result.found { border-color: var(--accent); color: var(--accent); }
+  #result.none { color: var(--muted); font-size: 1.5rem; font-weight: 600; }
+  #result.error { border-color: var(--danger); color: var(--danger); font-size: 1.4rem; font-weight: 600; }
+
+  #status { color: var(--muted); margin-top: 12px; min-height: 1.5em; text-align: center; }
+  #nearby {
+    margin-top: 14px; padding: 14px 16px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid var(--surface-raised);
+    color: var(--text); font-size: 1rem; min-height: 1.5em;
+  }
+  #nearby:empty { display: none; }
+
+  video { width: 100%; border-radius: var(--radius); background: #000; margin-top: 16px; aspect-ratio: 4 / 3; object-fit: cover; }
+
+  .row { display: flex; align-items: center; gap: 12px; margin-top: 18px; }
+  .row input[type=checkbox] { width: 28px; height: 28px; accent-color: var(--accent); flex: 0 0 auto; }
+  .row label { margin: 0; }
+
+  [hidden] { display: none !important; }
+  .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  @media (prefers-reduced-motion: no-preference) { button.primary:active { transform: scale(0.99); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Bus Spotter</h1>
+  <p class="tagline">Point the rear camera at a bus and hear its service number.</p>
+
+  <section id="setup" aria-labelledby="setup-h">
+    <h2 id="setup-h" class="visually-hidden">Set up</h2>
+    <div class="card">
+      <label for="apiKey">Anthropic API key</label>
+      <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-..." aria-describedby="key-hint">
+      <label for="modelSel">Model</label>
+      <select id="modelSel">
+        <option value="claude-sonnet-4-6">Sonnet 4.6 (more accurate)</option>
+        <option value="claude-haiku-4-5-20251001">Haiku 4.5 (faster, cheaper)</option>
+      </select>
+      <button id="saveKey" class="primary" style="font-size:1.2rem;min-height:68px;">Save and continue</button>
+      <p class="hint" id="key-hint">Your key is stored only in this browser, on this device, and is sent only to Anthropic's API when you read a bus. It is never put inside the file itself. If you host this page for others, each person enters their own key.</p>
+    </div>
+  </section>
+
+  <section id="app" aria-labelledby="app-h" hidden>
+    <h2 id="app-h" class="visually-hidden">Read a bus</h2>
+
+    <button id="startCam" class="primary" style="font-size:1.25rem;min-height:72px;">Start camera</button>
+    <video id="video" playsinline autoplay muted aria-hidden="true"></video>
+    <button id="capture" class="primary" disabled>Read the bus number</button>
+
+    <div id="result" role="status" aria-live="assertive" aria-atomic="true">Ready.</div>
+    <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+    <div id="nearby" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <button id="refreshNearby" class="subtle" hidden>Refresh nearby buses</button>
+
+    <div class="row">
+      <input type="checkbox" id="useLoc" checked>
+      <label for="useLoc">Use my location to narrow the likely buses</label>
+    </div>
+    <div class="row">
+      <input type="checkbox" id="speak">
+      <label for="speak">Speak the result aloud (extra to your screen reader)</label>
+    </div>
+
+    <button id="changeKey" class="subtle">Change key or model</button>
+  </section>
+
+  <canvas id="canvas" hidden></canvas>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var KEY_STORE = "busspotter.apiKey";
+  var MODEL_STORE = "busspotter.model";
+  var SPEAK_STORE = "busspotter.speak";
+  var LOC_STORE = "busspotter.useLoc";
+  var STOPS_CACHE = "busspotter.stops";
+  var STOPS_CACHE_TS = "busspotter.stopsTs";
+
+  var STOPS_URL = "https://data.busrouter.sg/v1/stops.min.json";
+  var ARRIVE_URL = "https://arrivelah2.busrouter.sg/?id=";
+  var NEARBY_RADIUS_M = 150;   // GPS in built-up areas drifts; 150 m keeps your stop in range
+  var MAX_NEARBY_STOPS = 3;
+  var IMMINENT_MS = 180000;    // treat arrivals within 3 minutes as "soon"
+  var REFRESH_MS = 30000;
+  var STOPS_TTL = 7 * 24 * 3600 * 1000;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var setup = $("setup"), app = $("app");
+  var apiKeyInput = $("apiKey"), modelSel = $("modelSel"), saveKey = $("saveKey");
+  var startCam = $("startCam"), video = $("video"), capture = $("capture");
+  var result = $("result"), statusEl = $("status"), nearbyEl = $("nearby");
+  var refreshBtn = $("refreshNearby"), useLocBox = $("useLoc"), speakBox = $("speak"), changeKey = $("changeKey");
+  var canvas = $("canvas");
+
+  var stream = null, busy = false;
+  var stopsData = null;                 // { code: [lng, lat, name, road], ... }
+  var candidates = { all: [], imminent: [], stopName: "" };
+  var refreshTimer = null;
+
+  /* ---------- storage helpers ---------- */
+  function sGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function sSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+
+  /* ---------- live-region announcing ---------- */
+  function announce(el, text) { el.textContent = ""; window.setTimeout(function () { el.textContent = text; }, 80); }
+  function setStatus(t) { announce(statusEl, t); }
+  function setNearby(t) { announce(nearbyEl, t); }
+
+  function showResult(text, kind) {
+    result.className = kind || "";
+    announce(result, text);
+    if (speakBox.checked) speak(text);
+    if (kind === "found") buzz([90, 50, 90]);       // success: double pulse
+    else if (kind === "none") buzz([40]);            // got an answer, no number
+  }
+
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new SpeechSynthesisUtterance(text)); } catch (e) {}
+  }
+  function buzz(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) {} }
+
+  /* ---------- geometry ---------- */
+  function distMetres(lat1, lng1, lat2, lng2) {
+    var R = 6371000, toRad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * toRad, dLng = (lng2 - lng1) * toRad;
+    var s1 = Math.sin(dLat / 2), s2 = Math.sin(dLng / 2);
+    var a = s1 * s1 + Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) * s2 * s2;
+    return 2 * R * Math.asin(Math.sqrt(a));
+  }
+  function busSort(a, b) {
+    var na = parseInt(a, 10), nb = parseInt(b, 10);
+    if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+    return String(a).localeCompare(String(b));
+  }
+
+  /* ---------- bus-stop dataset ---------- */
+  function loadStops() {
+    if (stopsData) return Promise.resolve(stopsData);
+    // Try a recent local cache first to save mobile data.
+    try {
+      var ts = parseInt(sGet(STOPS_CACHE_TS) || "0", 10);
+      if (ts && (Date.now() - ts) < STOPS_TTL) {
+        var cached = sGet(STOPS_CACHE);
+        if (cached) { stopsData = JSON.parse(cached); return Promise.resolve(stopsData); }
+      }
+    } catch (e) {}
+    return fetch(STOPS_URL).then(function (r) {
+      if (!r.ok) throw new Error("stops " + r.status);
+      return r.json();
+    }).then(function (data) {
+      stopsData = data;
+      try { sSet(STOPS_CACHE, JSON.stringify(data)); sSet(STOPS_CACHE_TS, String(Date.now())); } catch (e) {}
+      return data;
+    });
+  }
+
+  function nearestStops(lat, lng) {
+    var out = [];
+    for (var code in stopsData) {
+      if (!Object.prototype.hasOwnProperty.call(stopsData, code)) continue;
+      var s = stopsData[code]; // [lng, lat, name, road]
+      var d = distMetres(lat, lng, s[1], s[0]);
+      if (d <= NEARBY_RADIUS_M) out.push({ code: code, name: s[2], road: s[3], dist: d });
+    }
+    out.sort(function (a, b) { return a.dist - b.dist; });
+    return out.slice(0, MAX_NEARBY_STOPS);
+  }
+
+  /* ---------- candidate buses via arrivelah ---------- */
+  function getPosition() {
+    return new Promise(function (resolve, reject) {
+      if (!navigator.geolocation) { reject(new Error("no geolocation")); return; }
+      navigator.geolocation.getCurrentPosition(
+        function (p) { resolve(p.coords); },
+        function (err) { reject(err); },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 15000 }
+      );
+    });
+  }
+
+  function fetchArrivals(code) {
+    return fetch(ARRIVE_URL + encodeURIComponent(code))
+      .then(function (r) { return r.ok ? r.json() : { services: [] }; })
+      .catch(function () { return { services: [] }; });
+  }
+
+  function refreshNearby() {
+    if (!useLocBox.checked) { candidates = { all: [], imminent: [], stopName: "" }; return; }
+    setNearby("Finding nearby buses...");
+    getPosition().then(function (coords) {
+      return loadStops().then(function () {
+        var stops = nearestStops(coords.latitude, coords.longitude);
+        if (!stops.length) { candidates = { all: [], imminent: [], stopName: "" }; setNearby("No bus stop found within " + NEARBY_RADIUS_M + " metres. Reading without narrowing."); return; }
+        return Promise.all(stops.map(function (s) { return fetchArrivals(s.code); })).then(function (results) {
+          var all = {}, imminent = {};
+          results.forEach(function (res) {
+            (res.services || []).forEach(function (sv) {
+              if (!sv || !sv.no) return;
+              all[sv.no] = true;
+              if (sv.next && typeof sv.next.duration_ms === "number" && sv.next.duration_ms <= IMMINENT_MS) imminent[sv.no] = true;
+            });
+          });
+          var allList = Object.keys(all).sort(busSort);
+          var immList = Object.keys(imminent).sort(busSort);
+          candidates = { all: allList, imminent: immList, stopName: stops[0].name };
+          var msg = "Near " + stops[0].name + ".";
+          if (allList.length) msg += " Likely buses: " + allList.join(", ") + ".";
+          if (immList.length) msg += " Arriving soon: " + immList.join(", ") + ".";
+          setNearby(msg);
+        });
+      });
+    }).catch(function (err) {
+      candidates = { all: [], imminent: [], stopName: "" };
+      var msg = "Location unavailable, reading without narrowing.";
+      if (err && err.code === 1) msg = "Location permission denied. Reading without narrowing.";
+      setNearby(msg);
+    });
+  }
+
+  function startRefreshLoop() {
+    stopRefreshLoop();
+    if (useLocBox.checked) { refreshNearby(); refreshTimer = window.setInterval(refreshNearby, REFRESH_MS); }
+  }
+  function stopRefreshLoop() { if (refreshTimer) { window.clearInterval(refreshTimer); refreshTimer = null; } }
+
+  /* ---------- setup / key ---------- */
+  function hasKey() { return !!sGet(KEY_STORE); }
+  function enterApp() { setup.hidden = true; app.hidden = false; refreshBtn.hidden = !useLocBox.checked; startCam.focus(); }
+  function enterSetup() {
+    stopRefreshLoop(); app.hidden = true; setup.hidden = false;
+    apiKeyInput.value = sGet(KEY_STORE) || ""; modelSel.value = sGet(MODEL_STORE) || "claude-sonnet-4-6";
+    apiKeyInput.focus();
+  }
+
+  saveKey.addEventListener("click", function () {
+    var k = apiKeyInput.value.trim();
+    if (!k) { apiKeyInput.focus(); setStatus("Enter your API key first."); return; }
+    sSet(KEY_STORE, k); sSet(MODEL_STORE, modelSel.value); enterApp();
+  });
+  changeKey.addEventListener("click", function () { stopCamera(); enterSetup(); });
+
+  /* ---------- camera ---------- */
+  function stopCamera() {
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    capture.disabled = true; startCam.hidden = false; stopRefreshLoop();
+  }
+
+  startCam.addEventListener("click", function () {
+    setStatus("Starting camera...");
+    navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false
+    }).then(function (s) {
+      stream = s; video.srcObject = s; return video.play();
+    }).then(function () {
+      startCam.hidden = true; capture.disabled = false;
+      refreshBtn.hidden = !useLocBox.checked;
+      setStatus("Camera ready.");
+      showResult("Ready. Point at the bus and read.", "");
+      capture.focus();
+      startRefreshLoop();
+    }).catch(function (err) {
+      var msg = "Could not start the camera.";
+      if (err && err.name === "NotAllowedError") msg = "Camera permission was denied. Allow camera access, then start the camera again.";
+      else if (err && err.name === "NotFoundError") msg = "No camera was found on this device.";
+      else if (location.protocol !== "https:" && location.hostname !== "localhost") msg = "The camera needs a secure connection. Open this page over https.";
+      showResult(msg, "error"); setStatus("");
+    });
+  });
+
+  refreshBtn.addEventListener("click", function () { refreshNearby(); });
+
+  /* ---------- capture + recognise ---------- */
+  function captureFrame() {
+    var vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) return null;
+    var maxW = 1024, scale = vw > maxW ? maxW / vw : 1;
+    canvas.width = Math.round(vw * scale); canvas.height = Math.round(vh * scale);
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    return (canvas.toDataURL("image/jpeg", 0.8).split(",")[1]) || null;
+  }
+
+  function buildPrompt() {
+    var p = "You are assisting a blind commuter at a bus stop in Singapore. Read the bus service number shown on the front electronic destination sign of the bus in the photo (the route number, for example 2, 15, 196, 853, 700A or NR7).\n\n";
+    if (candidates.all.length) {
+      p += "Context from the commuter's location: the bus is very likely one of these services currently operating at this stop: " + candidates.all.join(", ") + ".";
+      if (candidates.imminent.length) p += " Services arriving imminently: " + candidates.imminent.join(", ") + ".";
+      p += " Use this as a strong hint, but if the number clearly visible on the bus is not in this list, report what you actually see rather than forcing a match.\n\n";
+    }
+    p += "Respond with ONLY a JSON object, no other text and no markdown fences, in exactly this shape:\n";
+    p += '{"status": "found" | "no_bus" | "unclear", "services": ["<number>"]}\n';
+    p += "- status \"found\": you can read at least one service number. List them in services, nearest or most prominent first.\n";
+    p += "- status \"no_bus\": there is no bus in the photo. services empty.\n";
+    p += "- status \"unclear\": a bus is visible but no number is readable. services empty.\n";
+    p += "Do not include any explanation.";
+    return p;
+  }
+
+  function parseAnswer(text) {
+    var t = (text || "").trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+    try {
+      var o = JSON.parse(t);
+      if (o && typeof o.status === "string") {
+        return { status: o.status, services: Array.isArray(o.services) ? o.services.map(String) : [] };
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  function presentAnswer(ans) {
+    if (!ans) { showResult("Could not read the reply. Try again.", "error"); setStatus(""); return; }
+    if (ans.status === "no_bus") { showResult("No bus visible. Try again.", "none"); setStatus("Done."); return; }
+    if (ans.status === "unclear" || !ans.services.length) { showResult("Bus visible, number unclear. Try again.", "none"); setStatus("Done."); return; }
+
+    var nums = ans.services;
+    var label = (nums.length > 1 ? "Buses " : "Bus ") + nums.join(", ");
+    // If we narrowed by location and none of the read numbers are in the likely set, flag it.
+    if (candidates.all.length) {
+      var inList = nums.some(function (n) { return candidates.all.indexOf(n) !== -1; });
+      if (!inList) label += " (not in the expected list, check carefully)";
+    }
+    showResult(label, "found");
+    setStatus("Done. Read again any time.");
+  }
+
+  function readBus() {
+    if (busy) return;
+    var key = sGet(KEY_STORE);
+    if (!key) { enterSetup(); return; }
+    var b64 = captureFrame();
+    if (!b64) { showResult("Camera not ready yet. Wait a moment and try again.", "error"); return; }
+
+    busy = true; capture.disabled = true;
+    showResult("Reading...", ""); setStatus("Sending the photo to Claude...");
+    var model = sGet(MODEL_STORE) || "claude-sonnet-4-6";
+
+    fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true"
+      },
+      body: JSON.stringify({
+        model: model,
+        max_tokens: 120,
+        messages: [{
+          role: "user",
+          content: [
+            { type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64 } },
+            { type: "text", text: buildPrompt() }
+          ]
+        }]
+      })
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.text().then(function () {
+          var msg = "Something went wrong (" + res.status + ").";
+          if (res.status === 401) msg = "The API key was rejected. Check it under Change key.";
+          else if (res.status === 429) msg = "Too many requests. Wait a few seconds and try again.";
+          else if (res.status === 529 || res.status === 500) msg = "The service is busy. Try again in a moment.";
+          throw new Error(msg);
+        });
+      }
+      return res.json();
+    }).then(function (data) {
+      var text = (data.content || []).filter(function (b) { return b.type === "text"; })
+        .map(function (b) { return b.text; }).join(" ").trim();
+      presentAnswer(parseAnswer(text));
+    }).catch(function (err) {
+      var msg = err && err.message ? err.message : "Network error. Check your connection and try again.";
+      if (/Failed to fetch|NetworkError/i.test(msg)) msg = "Could not reach the service. Check your connection and try again.";
+      showResult(msg, "error"); setStatus("");
+    }).then(function () {
+      busy = false; capture.disabled = false; capture.focus();
+    });
+  }
+  capture.addEventListener("click", readBus);
+
+  /* ---------- preferences ---------- */
+  speakBox.checked = sGet(SPEAK_STORE) === "1";
+  speakBox.addEventListener("change", function () { sSet(SPEAK_STORE, speakBox.checked ? "1" : "0"); });
+
+  if (sGet(LOC_STORE) === "0") useLocBox.checked = false;
+  useLocBox.addEventListener("change", function () {
+    sSet(LOC_STORE, useLocBox.checked ? "1" : "0");
+    refreshBtn.hidden = !useLocBox.checked;
+    if (!app.hidden && stream) { if (useLocBox.checked) startRefreshLoop(); else { stopRefreshLoop(); setNearby(""); candidates = { all: [], imminent: [], stopName: "" }; } }
+  });
+
+  modelSel.value = sGet(MODEL_STORE) || "claude-sonnet-4-6";
+
+  if (hasKey()) enterApp(); else enterSetup();
+})();
+</script>
+</body>
+</html>
